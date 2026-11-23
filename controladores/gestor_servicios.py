@@ -1,4 +1,3 @@
-
 """
 Módulo encargado de administrar los servicios de Software FJ.
 
@@ -9,19 +8,23 @@ Aplica polimorfismo al gestionar objetos que heredan de la clase
 abstracta Servicio.
 """
 
+# Importa la clase base abstracta Servicio para validar y filtrar tipos de servicio
 from modelos.servicio import Servicio
 
+# Importa las excepciones personalizadas para errores de validación o búsqueda
 from utilidades.excepciones import (
     ErrorValidacion,
     ServicioNoEncontradoError
 )
 
+# Importa las funciones de registro para guardar eventos y errores en el log
 from registros.registro_logs import (
     registrar_evento,
     registrar_error
 )
 
 
+# Define la clase encargada de gestionar la colección de servicios
 class GestorServicios:
     """
     Administra los servicios ofrecidos por Software FJ.
@@ -30,19 +33,23 @@ class GestorServicios:
     diferentes clases derivadas de Servicio.
     """
 
+    # Constructor que inicializa la lista interna vacía y registra el inicio
     def __init__(self):
         """Inicializa la lista interna de servicios."""
         self.__servicios = []
 
+        # Registra en el log que el gestor de servicios está listo
         registrar_evento(
             "Gestor de servicios inicializado correctamente"
         )
 
+    # Propiedad de solo lectura que devuelve cuántos servicios hay registrados
     @property
     def cantidad_servicios(self):
         """Devuelve la cantidad de servicios registrados."""
         return len(self.__servicios)
 
+    # Registra un nuevo servicio tras comprobar herencia, validez y duplicados
     def registrar_servicio(self, servicio):
         """
         Registra un servicio en la lista interna.
@@ -80,6 +87,7 @@ class GestorServicios:
             # Agrega el servicio a la lista.
             self.__servicios.append(servicio)
 
+            # Registra el alta exitosa del servicio en el log
             registrar_evento(
                 f"Servicio registrado: {servicio.nombre} | "
                 f"Tipo: {type(servicio).__name__} | ID: {servicio.id}"
@@ -88,6 +96,7 @@ class GestorServicios:
             return servicio
 
         except ErrorValidacion as error:
+            # Registra el error de validación y vuelve a lanzarlo
             registrar_error(
                 "No fue posible registrar el servicio",
                 error
@@ -95,6 +104,7 @@ class GestorServicios:
             raise
 
         except (TypeError, ValueError) as error:
+            # Convierte errores de tipo o valor en ErrorValidacion
             registrar_error(
                 "Error de validación durante el registro del servicio",
                 error
@@ -104,6 +114,7 @@ class GestorServicios:
                 "El servicio contiene datos inválidos."
             ) from error
 
+    # Busca un servicio por su identificador único
     def buscar_por_id(self, identificador):
         """
         Busca un servicio mediante su identificador único.
@@ -119,6 +130,7 @@ class GestorServicios:
             ServicioNoEncontradoError: Si no existe el servicio.
         """
 
+        # Valida que el identificador sea un texto no vacío
         if (
             not isinstance(identificador, str)
             or not identificador.strip()
@@ -130,6 +142,7 @@ class GestorServicios:
             registrar_error("Identificador de servicio inválido", error)
             raise error
 
+        # Recorre los servicios registrados buscando coincidencia exacta por ID
         for servicio in self.__servicios:
             if servicio.id == identificador:
                 registrar_evento(
@@ -137,6 +150,7 @@ class GestorServicios:
                 )
                 return servicio
 
+        # Si no se encuentra, registra el error y lanza ServicioNoEncontradoError
         error = ServicioNoEncontradoError(
             f"No existe un servicio con identificador {identificador}."
         )
@@ -144,6 +158,7 @@ class GestorServicios:
         registrar_error("Servicio no encontrado", error)
         raise error
 
+    # Busca servicios cuyo nombre contenga el texto indicado (sin distinguir mayúsculas)
     def buscar_por_nombre(self, nombre):
         """
         Busca servicios por su nombre.
@@ -161,6 +176,7 @@ class GestorServicios:
             ServicioNoEncontradoError: Si no hay coincidencias.
         """
 
+        # Valida que el texto de búsqueda no esté vacío
         if not isinstance(nombre, str) or not nombre.strip():
             error = ErrorValidacion(
                 "El nombre del servicio debe ser un texto no vacío."
@@ -169,6 +185,7 @@ class GestorServicios:
             registrar_error("Nombre de búsqueda inválido", error)
             raise error
 
+        # Normaliza el texto de búsqueda para comparar sin distinguir mayúsculas/acentos
         nombre_busqueda = nombre.strip().casefold()
 
         resultados = [
@@ -177,6 +194,7 @@ class GestorServicios:
             if nombre_busqueda in servicio.nombre.casefold()
         ]
 
+        # Si no hubo coincidencias, lanza ServicioNoEncontradoError
         if not resultados:
             error = ServicioNoEncontradoError(
                 f"No se encontraron servicios con el nombre '{nombre}'."
@@ -192,6 +210,7 @@ class GestorServicios:
 
         return resultados
 
+    # Retorna una copia superficial de la lista de servicios para protegerla
     def listar_servicios(self):
         """
         Devuelve una copia de todos los servicios registrados.
@@ -206,6 +225,7 @@ class GestorServicios:
 
         return self.__servicios.copy()
 
+    # Filtra los servicios según una subclase concreta de Servicio (ej. ServicioSala)
     def filtrar_por_tipo(self, tipo_servicio):
         """
         Filtra los servicios según su clase concreta.
@@ -217,6 +237,7 @@ class GestorServicios:
             list: Servicios que pertenecen al tipo solicitado.
         """
 
+        # Verifica que el argumento sea una clase derivada de Servicio
         if (
             not isinstance(tipo_servicio, type)
             or not issubclass(tipo_servicio, Servicio)
@@ -228,6 +249,7 @@ class GestorServicios:
             registrar_error("Tipo de servicio inválido", error)
             raise error
 
+        # Filtra los objetos que son instancia de la clase solicitada
         resultados = [
             servicio
             for servicio in self.__servicios
@@ -241,6 +263,7 @@ class GestorServicios:
 
         return resultados
 
+    # Actualiza el estado de disponibilidad (True/False) de un servicio existente
     def cambiar_disponibilidad(self, identificador, disponible):
         """
         Modifica la disponibilidad de un servicio.
@@ -253,6 +276,7 @@ class GestorServicios:
             Servicio: Servicio actualizado.
         """
 
+        # Exige que disponible sea un valor booleano explícito
         if not isinstance(disponible, bool):
             error = ErrorValidacion(
                 "La disponibilidad debe ser un valor booleano."
@@ -261,6 +285,7 @@ class GestorServicios:
             registrar_error("Estado de disponibilidad inválido", error)
             raise error
 
+        # Busca el servicio y actualiza su propiedad disponible
         servicio = self.buscar_por_id(identificador)
 
         try:
@@ -283,6 +308,7 @@ class GestorServicios:
                 "No se pudo actualizar la disponibilidad."
             ) from error
 
+    # Elimina un servicio de la lista interna a partir de su ID
     def eliminar_servicio(self, identificador):
         """
         Elimina un servicio mediante su identificador.
@@ -304,6 +330,7 @@ class GestorServicios:
 
         return servicio
 
+    # Verifica si ya existe un servicio registrado con ese identificador
     def existe_servicio(self, identificador):
         """
         Comprueba si existe un servicio con el identificador indicado.
@@ -317,6 +344,7 @@ class GestorServicios:
             for servicio in self.__servicios
         )
 
+    # Vacía todos los servicios guardados en memoria
     def limpiar_servicios(self):
         """
         Elimina todos los servicios de la lista interna.

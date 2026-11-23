@@ -1,11 +1,13 @@
-
+# Importa la clase Cliente y la clase base abstracta Servicio
 from modelos.cliente import Cliente
 from modelos.servicio import Servicio
 
+# Importa los controladores que administran clientes, servicios y reservas
 from controladores.gestor_clientes import GestorClientes
 from controladores.gestor_servicios import GestorServicios
 from controladores.gestor_reservas import GestorReservas
 
+# Importa las funciones para registrar eventos y errores en el archivo de logs
 from registros.registro_logs import registrar_evento, registrar_error
 
 
@@ -13,18 +15,23 @@ class ServicioDemostracion(Servicio):
     """Servicio concreto utilizado para probar la integración del sistema."""
 
     def calcular_costo(self, cantidad=1, descuento=0, impuesto=0.19):
+        # Verifica que la cantidad o duración sea mayor que cero
         if cantidad <= 0:
             raise ValueError("La duración debe ser mayor que cero.")
 
+        # Calcula el subtotal multiplicando precio base por cantidad y aplicando descuento
         subtotal = self.precio_base * cantidad
         subtotal -= subtotal * (descuento / 100)
 
+        # Devuelve el total redondeado a dos decimales sumando el impuesto
         return round(subtotal * (1 + impuesto), 2)
 
     def describir(self):
+        # Devuelve una descripción breve con nombre y detalle del servicio
         return f"{self.nombre}: {self.descripcion}"
 
     def validar_parametros(self, cantidad=1, **kwargs):
+        # Comprueba que la duración sea un número positivo válido
         if not isinstance(cantidad, (int, float)) or cantidad <= 0:
             raise ValueError("La duración debe ser un número positivo.")
 
@@ -34,12 +41,15 @@ class ServicioDemostracion(Servicio):
 def ejecutar_operacion(numero, descripcion, funcion):
     """Ejecuta una operación y controla sus posibles errores."""
 
+    # Muestra en consola qué operación de prueba se está corriendo
     print(f"\nOPERACIÓN {numero}: {descripcion}")
 
     try:
+        # Ejecuta la función de prueba recibida
         funcion()
 
     except Exception as error:
+        # Si ocurre un error, lo guarda en el log y lo informa sin detener la simulación
         registrar_error(
             f"Operación {numero} fallida: {descripcion}",
             error
@@ -47,20 +57,24 @@ def ejecutar_operacion(numero, descripcion, funcion):
         print(f"ERROR CONTROLADO: {error}")
 
     else:
+        # Si todo salió bien sin errores, registra el éxito en el log
         registrar_evento(
             f"Operación {numero} ejecutada correctamente: {descripcion}"
         )
         print("Resultado: CORRECTO")
 
     finally:
+        # Siempre se ejecuta al terminar la operación, haya dado error o no
         print(f"Operación {numero} finalizada.")
 
 
 def ejecutar_simulacion():
     """Ejecuta operaciones para comprobar el funcionamiento integral."""
 
+    # Registra el inicio de toda la simulación en el log
     registrar_evento("Inicio de la simulación integral de Software FJ")
 
+    # Crea las instancias de los gestores en memoria (sin base de datos)
     gestor_clientes = GestorClientes()
     gestor_servicios = GestorServicios()
 
@@ -69,6 +83,7 @@ def ejecutar_simulacion():
         gestor_servicios
     )
 
+    # Diccionario temporal para guardar objetos creados durante las pruebas
     datos = {}
 
     # 1. Registrar un cliente válido.
@@ -272,8 +287,10 @@ def ejecutar_simulacion():
         listar_reservas
     )
 
+    # Registra el fin de la simulación en el archivo de logs
     registrar_evento("Finalización de la simulación integral de Software FJ")
 
+    # Imprime el resumen final de cuántos elementos quedaron creados
     print("\n======================================")
     print("SIMULACIÓN FINALIZADA")
     print("======================================")
@@ -282,5 +299,7 @@ def ejecutar_simulacion():
     print(f"Reservas registradas: {gestor_reservas.cantidad_reservas}")
 
 
+# Ejecuta la simulación si este archivo se corre directamente
 if __name__ == "__main__":
     ejecutar_simulacion()
+    

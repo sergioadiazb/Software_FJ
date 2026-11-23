@@ -1,9 +1,11 @@
-
+# Importa isfinite para verificar que los valores numéricos sean finitos
 from math import isfinite
 
+# Importa la clase base Servicio de la que hereda ServicioAsesoria
 from modelos.servicio import Servicio
 
 
+# Define la clase ServicioAsesoria heredando de Servicio
 class ServicioAsesoria(Servicio):
     """
     Representa el servicio de asesorías especializadas
@@ -13,6 +15,7 @@ class ServicioAsesoria(Servicio):
     la especialidad, el profesional y la modalidad.
     """
 
+    # Constructor que inicializa los datos generales y específicos de la asesoría
     def __init__(
         self,
         nombre,
@@ -36,6 +39,7 @@ class ServicioAsesoria(Servicio):
             disponible (bool): Estado de disponibilidad.
         """
 
+        # Llama al constructor de Servicio para inicializar atributos comunes y validar
         super().__init__(
             nombre,
             descripcion,
@@ -43,42 +47,54 @@ class ServicioAsesoria(Servicio):
             disponible
         )
 
+        # Asigna los atributos propios de la asesoría usando sus setters
         self.especialidad = especialidad
         self.profesional = profesional
         self.modalidad = modalidad
 
+        # Ejecuta la validación completa del servicio de asesoría
         self.validar()
 
+    # Propiedad getter para consultar la especialidad
     @property
     def especialidad(self):
         return self.__especialidad
 
+    # Setter que valida y guarda la especialidad
     @especialidad.setter
     def especialidad(self, valor):
+        # Exige que la especialidad sea texto no vacío
         if not isinstance(valor, str) or not valor.strip():
             raise ValueError(
                 "La especialidad no puede estar vacía."
             )
 
+        # Guarda el valor limpio de espacios sobrantes
         self.__especialidad = valor.strip()
 
+    # Propiedad getter para consultar el profesional encargado
     @property
     def profesional(self):
         return self.__profesional
 
+    # Setter que valida y guarda el nombre del profesional
     @profesional.setter
     def profesional(self, valor):
+        # Exige que el nombre del profesional sea texto no vacío
         if not isinstance(valor, str) or not valor.strip():
             raise ValueError(
                 "El nombre del profesional no puede estar vacío."
             )
 
+        # Guarda el nombre limpio de espacios extremos
         self.__profesional = valor.strip()
 
+    # Propiedad getter para consultar la modalidad
     @property
     def modalidad(self):
         return self.__modalidad
 
+    # Setter que valida que la modalidad sea virtual o presencial
     @modalidad.setter
     def modalidad(self, valor):
         if not isinstance(valor, str):
@@ -86,8 +102,10 @@ class ServicioAsesoria(Servicio):
                 "La modalidad debe ser un texto."
             )
 
+        # Normaliza el texto quitando espacios y pasando a minúsculas
         valor = valor.strip().lower()
 
+        # Define las únicas modalidades aceptadas
         modalidades_validas = ("virtual", "presencial")
 
         if valor not in modalidades_validas:
@@ -95,22 +113,27 @@ class ServicioAsesoria(Servicio):
                 "La modalidad debe ser virtual o presencial."
             )
 
+        # Guarda la modalidad válida
         self.__modalidad = valor
 
+    # Valida tanto los atributos heredados como los propios de la asesoría
     def validar(self):
         """
         Valida los atributos generales y específicos
         del servicio de asesoría.
         """
 
+        # Valida los atributos generales de Servicio
         super().validar()
 
+        # Reaplica validaciones de los atributos específicos
         self.especialidad = self.__especialidad
         self.profesional = self.__profesional
         self.modalidad = self.__modalidad
 
         return True
 
+    # Valida disponibilidad y duración de la asesoría antes de reservar o cobrar
     def validar_parametros(self, cantidad=1):
         """
         Valida la duración de la asesoría y la disponibilidad.
@@ -119,11 +142,13 @@ class ServicioAsesoria(Servicio):
             cantidad (float): Duración de la asesoría en horas.
         """
 
+        # Impide usar el servicio si no está disponible
         if not self.disponible:
             raise ValueError(
                 "El servicio de asesoría no está disponible."
             )
 
+        # Verifica que la duración sea numérica y no booleana
         if (
             isinstance(cantidad, bool)
             or not isinstance(cantidad, (int, float))
@@ -132,6 +157,7 @@ class ServicioAsesoria(Servicio):
                 "La duración debe ser un valor numérico."
             )
 
+        # Verifica que la duración sea finita y mayor que cero
         if not isfinite(cantidad) or cantidad <= 0:
             raise ValueError(
                 "La duración debe ser mayor que cero."
@@ -139,6 +165,7 @@ class ServicioAsesoria(Servicio):
 
         return True
 
+    # Calcula el costo total aplicando duración, descuento e impuesto
     def calcular_costo(
         self,
         cantidad=1,
@@ -157,8 +184,10 @@ class ServicioAsesoria(Servicio):
             float: Costo total de la asesoría.
         """
 
+        # Primero valida disponibilidad y duración en horas
         self.validar_parametros(cantidad)
 
+        # Revisa que tanto el descuento como el impuesto estén entre 0 y 1
         for nombre, porcentaje in (
             ("Descuento", descuento),
             ("Impuesto", impuesto)
@@ -173,6 +202,7 @@ class ServicioAsesoria(Servicio):
                     f"El {nombre.lower()} debe estar entre 0 y 1."
                 )
 
+        # Calcula subtotal, resta el descuento y suma el impuesto redondeado a 2 decimales
         subtotal = self.precio_base * cantidad
         valor_descuento = subtotal * descuento
         subtotal_con_descuento = subtotal - valor_descuento
@@ -183,6 +213,7 @@ class ServicioAsesoria(Servicio):
             2
         )
 
+    # Devuelve una ficha descriptiva completa de la asesoría
     def describir(self):
         """
         Genera una descripción detallada del servicio
